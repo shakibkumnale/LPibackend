@@ -1,5 +1,5 @@
 const  mongoose  = require("mongoose");
-require("../src/db/connectDB")
+require("../connection/connect")
 const jwt =require("jsonwebtoken");
 const bcrypt=require('bcrypt')
 
@@ -33,6 +33,10 @@ Phone:{ type:String,
     required:true,
     unique:true
 },
+ Verified:{
+    type:Boolean,
+    default: false
+ },
 chats: [
     { 
       query: String,
@@ -79,5 +83,5 @@ params()
 // next()
 // })
 
-const User = new mongoose.model("User",userSchegma);
+const User = new mongoose.model("user",userSchegma);
  module.exports= User;  

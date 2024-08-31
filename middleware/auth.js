@@ -1,17 +1,40 @@
-// middleware/auth.js
-const multer = require('multer');
-const path = require('path');
+// 
+const jwt = require("jsonwebtoken");
+const UserModel = require('../model/users');
 
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
+const auth = async (req, res, next) => {
+    try {
+        const authHeader = req.header("Authorization");
+            console.log(authHeader);
+     
+        if (!authHeader) {
+            return res.status(401).send("Authorization header missing");
+        }
 
-const upload = multer({ storage });
+        const token = authHeader.replace("Bearer ", "");
+         
+        if (!token) {
+            return res.status(401).send("Token not found");
+        }
 
-module.exports = upload;
+        let verifyUser;
+        try {
+            verifyUser = jwt.verify(token, "shaka");
+        } catch (error) {
+            return res.status(401).send("Invalid token");
+        }
+
+        const user = await UserModel.findOne({ _id: verifyUser._id }).select({ Password: 0, tokens: 0 });
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+        console.log(user);
+        req.userData = user;
+        next();
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal server error");
+    }
+};
+
+module.exports = auth;
